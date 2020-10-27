@@ -1,18 +1,27 @@
-// Imports
 const cTable = require('console.table');
 const e = require('express');
 const fs = require('fs');
 const inquirer = require('inquirer');
 const connection = require('./db/server.js');
 
-// When you start the application prompt the user for what they want to do
+// Prompts when app starts
 const startApp = () => {
     inquirer.prompt([
         {
             name: 'promptStart', 
             type: 'list',
             message: 'What would you like to do?',
-            choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add A Department', 'Add A Role', 'Add An Employee', 'Update An Employee Role', 'Remove An Employee', '----EXIT----',]
+            choices: [
+                    'View All Departments',
+                    'View All Roles',
+                    'View All Employees',
+                    'Add A Department',
+                    'Add A Role',
+                    'Add An Employee',
+                    'Update An Employee Role',
+                    'Remove An Employee',
+                    '----EXIT----',
+                ]
         }
     ])
         // switch case filters through answers
@@ -48,14 +57,14 @@ const startApp = () => {
         })
 }
 
-// view all the employees by selecting the correct query parameters for my sql
+// view all the employees in inquirer
 const viewAllEmployees = () => {
     const sql = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee
         LEFT JOIN role ON employee.role_id = role.id
         LEFT JOIN department ON role.department_id = department.id
         LEFT JOIN employee manager ON manager.id = employee.manager_id
     `
-    // display the information then re-prompt the user with the questions
+    // display info in rows
     connection.promise().query(sql)
         .then(([rows]) => {
             console.log("\n");
@@ -68,7 +77,7 @@ const viewAllEmployees = () => {
 const viewAllDepartments = () => {
     const sql = `SELECT * FROM department`
 
-    // display the information then re-prompt the user with the questions
+    // display the info in rows
     connection.promise().query(sql)
         .then(([rows]) => {
             console.log('\n');
@@ -77,11 +86,11 @@ const viewAllDepartments = () => {
         .then(() => startApp());
 }
 
-// view all the roles
+// view all roles
 const viewAllRoles = () => {
     const sql = `SELECT * FROM role`
 
-    // display the information then reprompt the user with the questions
+    // display the info in rows
     connection.promise().query(sql)
         .then(([rows]) => {
             console.log('\n');
@@ -90,7 +99,7 @@ const viewAllRoles = () => {
         .then(() => startApp());
 }
 
-// add a department by prompting the user to enter the name
+// adds a department
 const addADept = () => {
     inquirer.prompt([
         {
@@ -99,7 +108,7 @@ const addADept = () => {
             message: 'Enter the department name'
         }
     ])
-        // update the database, the display the info and re-prompt the user wih the questions
+        // update the db, the display the info
         .then(data => {
             connection.promise().query("INSERT INTO department SET name=?", data.departmentName)
                 .then(([rows]) => {
@@ -118,7 +127,7 @@ const addARole = () => {
 
     connection.promise().query(sql)
         .then(([rows]) => {
-            // mapping all the departments to their own array so the user can pick them
+            // map all the departments to an array
             const departmentArr = rows.map(row => ({ name: row.name, value: row.id }));
             inquirer.prompt([
                 {
@@ -137,7 +146,7 @@ const addARole = () => {
                     message: 'Pick the department',
                     choices: departmentArr
                 }])
-                // update the database, the display the info and reprompt the user wih the questions
+                // update the database, the display the info
                 .then(result => {
                     connection.promise().query(
                         "INSERT INTO role SET ?", result
@@ -187,7 +196,7 @@ const addAnEmployee = () => {
                             message: 'Pick the manager',
                             choices: [...managerArr, { name: "NONE", value: null }]
                         }])
-                        // updates the database with the information from the user
+                        // updates the database with user info
                         .then(result => {
                             connection.promise().query(
                                 "INSERT INTO employee SET ?", result
@@ -201,7 +210,7 @@ const addAnEmployee = () => {
         })
 }
 
-// update an employee by prompting the user
+// updates employee role
 const updateEmployeeRole = () => {
     const sql = `SELECT role.id, role.title FROM role`;
     const sql2 = `SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) as employee FROM employee`;
@@ -241,7 +250,7 @@ const updateEmployeeRole = () => {
                 })
         })
 }
-
+//BONUS
 // removes an employee selected by the user
 const removeEmployee = () => {
     const sql = `SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) as employee FROM employee`;
